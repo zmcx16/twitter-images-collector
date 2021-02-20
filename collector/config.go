@@ -3,21 +3,33 @@ package collector
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
+
+// UserData struct
+type UserData struct {
+	UserID     string `json:"user_id"`
+	FolderName string `json:"folder_name"`
+	DestPath   string `json:"dest_path"`
+}
 
 // Config collector info and setting.
 type Config struct {
-	ThreadCnt    int      `json:"thread_cnt"`
-	CollectUsers []string `json:"collect_users"`
-	APIKey       string   `json:"api_key"`
-	APISecret    string   `json:"api_secret"`
-	BearerToken  string
+	ThreadCnt       int        `json:"thread_cnt"`
+	CollectUsers    []UserData `json:"collect_users"`
+	ImageSize       string     `json:"image_size"`
+	EnableLog       bool       `json:"enable_log"`
+	SyncLastNDays   int        `json:"sync_last_n_days"`
+	IncludeRetweets bool       `json:"include_retweets"`
+	APIKey          string     `json:"api_key"`
+	APISecret       string     `json:"api_secret"`
+	BearerToken     string
 }
 
 // BearerTokenResp struct
@@ -35,15 +47,19 @@ func (c *Config) LoadConfig(configPath string) {
 	}
 
 	json.Unmarshal(byteConfig, &c)
-	fmt.Println(string(byteConfig))
+
+	if c.EnableLog {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.ErrorLevel)
+	}
+
 	c.genToken()
-	fmt.Println(c)
 }
 
 func (c *Config) genToken() {
 
 	credential := base64.StdEncoding.EncodeToString([]byte(c.APIKey + ":" + c.APISecret))
-	fmt.Println(credential)
 	data := url.Values{"grant_type": {"client_credentials"}}
 
 	req, err := http.NewRequest("POST", "https://api.twitter.com/oauth2/token", strings.NewReader(data.Encode()))
@@ -54,7 +70,7 @@ func (c *Config) genToken() {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 
 	// dump, _ := httputil.DumpRequestOut(req, true)
-	// fmt.Println(string(dump))
+	// log.Println(string(dump))
 
 	clt := http.Client{}
 	resp, err := clt.Do(req)
@@ -69,15 +85,14 @@ func (c *Config) genToken() {
 	}
 
 	// dump, _ = httputil.DumpResponse(resp, true)
-	// fmt.Println(string(dump))
+	// log.Println(string(dump))
 
 	if resp.StatusCode == 200 {
-		c.BearerToken = "ttt"
-
 		var jsonTokenResp BearerTokenResp
-
 		json.Unmarshal(content, &jsonTokenResp)
 		c.BearerToken = jsonTokenResp.AccessToken
+	} else {
+		log.Fatal("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
 	}
 
 }
