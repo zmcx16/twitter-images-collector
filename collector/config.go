@@ -32,12 +32,6 @@ type Config struct {
 	BearerToken     string
 }
 
-// BearerTokenResp struct
-type BearerTokenResp struct {
-	TokenType   string `json:"token_type"`
-	AccessToken string `json:"access_token"`
-}
-
 // LoadConfig (read config and generate twitter bearer token)
 func (c *Config) LoadConfig(configPath string) {
 
@@ -54,7 +48,7 @@ func (c *Config) LoadConfig(configPath string) {
 		log.SetLevel(log.ErrorLevel)
 	}
 
-	c.genToken()
+	c.BearerToken = genBearerToken(c.APIKey, c.APISecret)
 }
 
 func (c *Config) genToken() {
