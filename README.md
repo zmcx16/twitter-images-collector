@@ -16,6 +16,7 @@ Trace and download specified Twitter users' post images
   ]
 }
 ```
+Put config.json into the main program folder, set api_key, api_secret and collect_users in config.json to trace / download the specified Twitter users' post images.
 * api_key & api_secret: Apply twitter developer account to get API key and API secret (https://developer.twitter.com/) 
 * image_size: "large", "medium", "small", "orig", "thumb"
 * sync_last_n_days: trace last N days tweet post images
