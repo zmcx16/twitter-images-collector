@@ -1,6 +1,6 @@
 # twitter-images-collector
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/429545f2c9d9403cb1f89671223abc54)](https://app.codacy.com/gh/zmcx16/twitter-images-collector?utm_source=github.com&utm_medium=referral&utm_content=zmcx16/twitter-images-collector&utm_campaign=Badge_Grade_Settings)
+![Travis-CI Badge](https://travis-ci.org/zmcx16/twitter-images-collector.svg?branch=master) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/429545f2c9d9403cb1f89671223abc54)](https://app.codacy.com/gh/zmcx16/twitter-images-collector?utm_source=github.com&utm_medium=referral&utm_content=zmcx16/twitter-images-collector&utm_campaign=Badge_Grade_Settings)
 
 Trace and download specified Twitter users' post images
 
