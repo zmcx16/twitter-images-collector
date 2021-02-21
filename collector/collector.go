@@ -65,7 +65,7 @@ func (c *Collector) DoDownload() {
 
 		userFolderPath := path.Join(destPath, folderName)
 		if _, err := os.Stat(userFolderPath); os.IsNotExist(err) {
-			os.Mkdir(userFolderPath, os.ModeDir)
+			os.MkdirAll(userFolderPath, os.ModeDir)
 		}
 
 		userDWEnd := false
@@ -159,39 +159,6 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 	}
 	wg.Wait()
 
-	/*
-		for _, tweet := range tweets {
-			// Thu Apr 06 15:28:43 +0000 2017
-			createTime, _ := time.Parse(time.RubyDate, tweet["created_at"].(string))
-			if createTime.Before(stopDays) {
-				fmt.Println("Stop task due to " + createTime.Format("2006-0102") + " < " + stopDays.Format("2006-0102"))
-				threadDWEnd[0] = true
-				break
-			}
-
-			imgURLs := extractImage(tweet)
-
-			imgCnt := 0
-			for imgURL := range imgURLs {
-				fname := createTime.Format("2006-0102-150405")
-				if imgCnt != 0 {
-					fname += "_" + strconv.Itoa(imgCnt)
-				}
-				log.Println(fname)
-				log.Println(imgURL)
-
-				imgCnt++
-				c.userImgCnt++
-				if saveImage(imgURL, imgSize, path.Join(userFolderPath, fname)) {
-					fmt.Printf("(%d) downloaded: %s\n", c.userImgCnt, fname)
-				} else {
-					fmt.Printf("(%d) skipped: %s\n", c.userImgCnt, fname)
-				}
-			}
-
-			lastTweetFloat = tweet["id"].(float64)
-		}
-	*/
 	return strconv.FormatFloat(lastTweetFloat, 'f', 0, 64), userDWEnd
 }
 
