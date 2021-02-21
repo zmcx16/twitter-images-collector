@@ -1,0 +1,12 @@
+language: go
+go:
+- 1.16.x
+
+script:
+- export GO111MODULE=on
+- go test -v ./collector
+- GOOS=windows GOARCH=amd64 go build ./cmd/main.go
+
+notifications:
+    email:
+        - zmcx16@gmail.com
