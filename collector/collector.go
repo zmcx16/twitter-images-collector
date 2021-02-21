@@ -81,8 +81,10 @@ func (c *Collector) DoDownload() {
 				break
 			} else {
 				//fmt.Println(tweets)
+				lastTweet2 := lastTweet
 				lastTweet, userDWEnd = c.dwTweetImgs(tweets, stopDays, threadCnt, imgSize, userFolderPath)
-				if userDWEnd {
+				if userDWEnd || lastTweet == lastTweet2 {
+					fmt.Println("Stop download task")
 					break
 				}
 			}
