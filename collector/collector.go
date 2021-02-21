@@ -21,6 +21,7 @@ import (
 type Collector struct {
 	config           Config
 	userImgCnt       int
+	muxThreadStopped sync.RWMutex
 	muxUserImgCnt    sync.RWMutex
 	muxLastTwitterID sync.RWMutex
 	muxTweet         sync.RWMutex
@@ -91,7 +92,8 @@ func (c *Collector) DoDownload() {
 
 func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.Time, threadCnt int, imgSize, userFolderPath string) (lastTweet string, userDWEnd bool) {
 
-	var lastTweetFloat float64
+	lastTweetFloat := math.MaxFloat64
+	var threadTerminatedList = make([]bool, threadCnt)
 	tweetIndexQueue := list.New()
 	for i := range tweets {
 		tweetIndexQueue.PushBack(i)
@@ -100,6 +102,7 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 	var wg sync.WaitGroup
 
 	for ti := 0; ti < threadCnt; ti++ {
+
 		wg.Add(1)
 		go func(ti int) {
 			defer wg.Done()
@@ -108,7 +111,8 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 				c.muxTweet.Lock()
 
 				if tweetIndexQueue.Len() == 0 {
-					fmt.Printf("[T%d] thread end", ti)
+					fmt.Printf("[T%d] thread end\n", ti)
+					c.muxTweet.Unlock()
 					return
 				}
 
@@ -118,11 +122,19 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 
 				c.muxTweet.Unlock()
 
+				terminated := false
 				// Thu Apr 06 15:28:43 +0000 2017
 				createTime, _ := time.Parse(time.RubyDate, tweet["created_at"].(string))
 				if createTime.Before(stopDays) {
 					fmt.Printf("[T%d] Stop task due to %s < %s\n", ti, createTime.Format("2006-0102"), stopDays.Format("2006-0102"))
+					terminated = true
 					userDWEnd = true
+				}
+
+				if terminated {
+					c.muxThreadStopped.Lock()
+					threadTerminatedList[ti] = true
+					c.muxThreadStopped.Unlock()
 					return
 				}
 
@@ -152,12 +164,22 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 				}
 
 				c.muxLastTwitterID.Lock()
-				lastTweetFloat = math.Max(lastTweetFloat, tweet["id"].(float64))
+				lastTweetFloat = math.Min(lastTweetFloat, tweet["id"].(float64))
 				c.muxLastTwitterID.Unlock()
 			}
 		}(ti)
 	}
 	wg.Wait()
+
+	threadAllTerminated := true
+	for ti := 0; ti < threadCnt; ti++ {
+		threadAllTerminated = threadAllTerminated && threadTerminatedList[ti]
+	}
+
+	if threadAllTerminated {
+		fmt.Println("all thread terminated")
+		userDWEnd = true
+	}
 
 	return strconv.FormatFloat(lastTweetFloat, 'f', 0, 64), userDWEnd
 }
