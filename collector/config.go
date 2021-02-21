@@ -1,22 +1,18 @@
 package collector
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
 // UserData struct
 type UserData struct {
-	UserID     string `json:"user_id"`
-	FolderName string `json:"folder_name"`
-	DestPath   string `json:"dest_path"`
+	UserID     string          `json:"user_id"`
+	FolderName json.RawMessage `json:"folder_name"`
+	DestPath   json.RawMessage `json:"dest_path"`
 }
 
 // Config collector info and setting.
@@ -33,11 +29,12 @@ type Config struct {
 }
 
 // LoadConfig (read config and generate twitter bearer token)
-func (c *Config) LoadConfig(configPath string) {
+func (c *Config) LoadConfig(configPath string) bool {
 
 	byteConfig, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return false
 	}
 
 	json.Unmarshal(byteConfig, &c)
@@ -48,45 +45,11 @@ func (c *Config) LoadConfig(configPath string) {
 		log.SetLevel(log.ErrorLevel)
 	}
 
-	c.BearerToken = genBearerToken(c.APIKey, c.APISecret)
-}
-
-func (c *Config) genToken() {
-
-	credential := base64.StdEncoding.EncodeToString([]byte(c.APIKey + ":" + c.APISecret))
-	data := url.Values{"grant_type": {"client_credentials"}}
-
-	req, err := http.NewRequest("POST", "https://api.twitter.com/oauth2/token", strings.NewReader(data.Encode()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Add("Authorization", "Basic "+credential)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
-
-	// dump, _ := httputil.DumpRequestOut(req, true)
-	// log.Println(string(dump))
-
-	clt := http.Client{}
-	resp, err := clt.Do(req)
-	if err != nil {
-		log.Fatal(err)
+	twitterAPI := &TwitterAPI{Client: &http.Client{}}
+	c.BearerToken = twitterAPI.GenBearerToken(c.APIKey, c.APISecret)
+	if c.BearerToken == "" {
+		return false
 	}
 
-	defer resp.Body.Close()
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// dump, _ = httputil.DumpResponse(resp, true)
-	// log.Println(string(dump))
-
-	if resp.StatusCode == 200 {
-		var jsonTokenResp BearerTokenResp
-		json.Unmarshal(content, &jsonTokenResp)
-		c.BearerToken = jsonTokenResp.AccessToken
-	} else {
-		log.Fatal("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
-	}
-
+	return true
 }

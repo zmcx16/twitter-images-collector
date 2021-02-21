@@ -19,14 +19,20 @@ type BearerTokenResp struct {
 	AccessToken string `json:"access_token"`
 }
 
-func genBearerToken(APIKey, APISecret string) string {
+// TwitterAPI struct
+type TwitterAPI struct {
+	Client *http.Client
+}
+
+// GenBearerToken generate twitter bearer token
+func (tapi *TwitterAPI) GenBearerToken(APIKey, APISecret string) string {
 
 	credential := base64.StdEncoding.EncodeToString([]byte(APIKey + ":" + APISecret))
 	data := url.Values{"grant_type": {"client_credentials"}}
 
 	req, err := http.NewRequest("POST", "https://api.twitter.com/oauth2/token", strings.NewReader(data.Encode()))
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	req.Header.Add("Authorization", "Basic "+credential)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
@@ -34,16 +40,15 @@ func genBearerToken(APIKey, APISecret string) string {
 	// dump, _ := httputil.DumpRequestOut(req, true)
 	// log.Println(string(dump))
 
-	clt := http.Client{}
-	resp, err := clt.Do(req)
+	resp, err := tapi.Client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	defer resp.Body.Close()
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	// dump, _ = httputil.DumpResponse(resp, true)
@@ -55,11 +60,12 @@ func genBearerToken(APIKey, APISecret string) string {
 		return jsonTokenResp.AccessToken
 	}
 
-	log.Fatal("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
+	log.Error("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
 	return ""
 }
 
-func getTweets(token, user string, start string, rts bool) []map[string]interface{} {
+// GetTweets get user timeline twitter
+func (tapi *TwitterAPI) GetTweets(token, user string, start string, rts bool) []map[string]interface{} {
 
 	reqParam := "?screen_name=" + user + "&count=200&include_rts=" + strconv.FormatBool(rts) + "&tweet_mode=extended"
 	if start != "0" {
@@ -68,20 +74,19 @@ func getTweets(token, user string, start string, rts bool) []map[string]interfac
 
 	req, err := http.NewRequest("GET", "https://api.twitter.com/1.1/statuses/user_timeline.json"+reqParam, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	req.Header.Add("Authorization", "Bearer "+token)
 
-	clt := http.Client{}
-	resp, err := clt.Do(req)
+	resp, err := tapi.Client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	defer resp.Body.Close()
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	// fmt.Println(string(content))

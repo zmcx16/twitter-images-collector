@@ -14,9 +14,10 @@ import (
 
 func main() {
 
-	fmt.Println(collector.Hello())
+	fmt.Println("*** twitter-images-collector start ***")
 
-	logFolderPath := path.Join(filepath.Dir(os.Args[0]), "log")
+	procDirPath := filepath.Dir(os.Args[0])
+	logFolderPath := path.Join(procDirPath, "log")
 	if _, err := os.Stat(logFolderPath); os.IsNotExist(err) {
 		os.Mkdir(logFolderPath, os.ModeDir)
 	}
@@ -26,8 +27,14 @@ func main() {
 	mw := io.MultiWriter(r)
 	log.SetOutput(mw)
 	log.SetReportCaller(true)
-	log.Println(collector.Hello())
 	c := collector.Collector{}
-	c.Init("I:/work/WORK/GO/twitter-images-collector/config.json")
+
+	if !c.Init(path.Join(procDirPath, "config.json")) {
+		fmt.Println("twitter-images-collector Init failed")
+		os.Exit(-1)
+	}
+
 	c.DoDownload()
+
+	fmt.Println("*** twitter-images-collector end ***")
 }
