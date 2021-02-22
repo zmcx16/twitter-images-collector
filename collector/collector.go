@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -82,7 +83,7 @@ func (c *Collector) DoDownload() {
 			} else {
 				//fmt.Println(tweets)
 				lastTweet2 := lastTweet
-				lastTweet, userDWEnd = c.dwTweetImgs(tweets, stopDays, threadCnt, imgSize, userFolderPath)
+				lastTweet, userDWEnd = c.dwTweetImgs(tweets, stopDays, threadCnt, user.SaveDetail, imgSize, user.UserID, userFolderPath)
 				if userDWEnd || lastTweet == lastTweet2 {
 					fmt.Println("Stop download task")
 					break
@@ -92,7 +93,7 @@ func (c *Collector) DoDownload() {
 	}
 }
 
-func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.Time, threadCnt int, imgSize, userFolderPath string) (lastTweet string, userDWEnd bool) {
+func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.Time, threadCnt int, saveDetail bool, imgSize, userID, userFolderPath string) (lastTweet string, userDWEnd bool) {
 
 	lastTweetFloat := math.MaxFloat64
 	var threadTerminatedList = make([]bool, threadCnt)
@@ -140,28 +141,37 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 					return
 				}
 
-				imgURLs := extractImage(tweet)
+				imgURLs, tweetText := extractImage(tweet, saveDetail)
 
 				imgCnt := 0
+				fname := createTime.Format("2006-0102-150405")
 				for imgURL := range imgURLs {
-					fname := createTime.Format("2006-0102-150405")
+					imgFname := fname
 					if imgCnt != 0 {
-						fname += "_" + strconv.Itoa(imgCnt)
+						imgFname += "_" + strconv.Itoa(imgCnt)
 					}
-					log.Println(fname)
+					log.Println(imgFname)
 					log.Println(imgURL)
 
 					imgCnt++
-					if saveImage(imgURL, imgSize, path.Join(userFolderPath, fname)) {
+					if saveImage(imgURL, imgSize, path.Join(userFolderPath, imgFname)) {
 						c.muxUserImgCnt.Lock()
 						c.userImgCnt++
-						fmt.Printf("(%d) downloaded: %s\n", c.userImgCnt, fname)
+						fmt.Printf("(%d) downloaded image: %s\n", c.userImgCnt, imgFname)
 						c.muxUserImgCnt.Unlock()
 					} else {
 						c.muxUserImgCnt.Lock()
 						c.userImgCnt++
-						fmt.Printf("(%d) skipped: %s\n", c.userImgCnt, fname)
+						fmt.Printf("(%d) skipped image: %s\n", c.userImgCnt, imgFname)
 						c.muxUserImgCnt.Unlock()
+					}
+				}
+
+				if imgCnt > 0 && saveDetail {
+					if saveDetailInfo(tweetText, path.Join(userFolderPath, fname)) {
+						fmt.Printf("downloaded detail: %s\n", fname)
+					} else {
+						fmt.Printf("skipped detail: %s\n", fname)
 					}
 				}
 
@@ -188,8 +198,8 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 
 func saveImage(imgURL, imgSize, filePath string) bool {
 
-	destFilePath := filePath + filepath.Ext(imgURL)
-	if _, err := os.Stat(destFilePath); err == nil || os.IsExist(err) {
+	destImgFilePath := filePath + filepath.Ext(imgURL)
+	if _, err := os.Stat(destImgFilePath); err == nil || os.IsExist(err) {
 		return false
 	}
 
@@ -205,7 +215,7 @@ func saveImage(imgURL, imgSize, filePath string) bool {
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create(destFilePath)
+	out, err := os.Create(destImgFilePath)
 	if err != nil {
 		log.Error(err)
 		return false
@@ -221,9 +231,29 @@ func saveImage(imgURL, imgSize, filePath string) bool {
 	return true
 }
 
-func extractImage(tweet map[string]interface{}) map[string]bool {
+func saveDetailInfo(tweetText, filePath string) bool {
 
-	imgURLs := make(map[string]bool)
+	destDetailFilePath := filePath + ".txt"
+	if _, err := os.Stat(destDetailFilePath); err == nil || os.IsExist(err) {
+		return false
+	}
+
+	err := ioutil.WriteFile(destDetailFilePath, []byte(tweetText), 0644)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+
+	return true
+}
+
+func extractImage(tweet map[string]interface{}, saveDetail bool) (imgURLs map[string]bool, tweetText string) {
+
+	imgURLs = make(map[string]bool)
+
+	if saveDetail {
+		tweetText = tweet["full_text"].(string)
+	}
 
 	entities := tweet["entities"].(map[string]interface{})
 	if media, ok := entities["media"]; ok {
@@ -249,5 +279,5 @@ func extractImage(tweet map[string]interface{}) map[string]bool {
 		}
 	}
 
-	return imgURLs
+	return
 }

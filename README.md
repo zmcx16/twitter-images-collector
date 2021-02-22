@@ -15,7 +15,7 @@ Trace and download specified Twitter users' post images
   "sync_last_n_days": 30,
   "include_retweets": true,
   "collect_users": [
-	{"user_id": "{trace twitter user id}", "folder_name": "", "dest_path": ""}
+	{"user_id": "{trace twitter user id}", "save_detail": false, "folder_name": "", "dest_path": ""}
   ]
 }
 ```
@@ -24,6 +24,7 @@ Put config.json into the main program folder, set api_key, api_secret and collec
 * image_size: "large", "medium", "small", "orig", "thumb"
 * sync_last_n_days: trace last N days tweet post images
 * collect_users.user_id: trace tweet user ID
+* save_detail: save image with tweet text content and url
 * collect_users.folder_name: output folder name, default is collect_users.user_id
 * collect_users.dest_path: output path
 

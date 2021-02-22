@@ -10,9 +10,10 @@ import (
 
 // UserData struct
 type UserData struct {
-	UserID     string          `json:"user_id"`
-	FolderName json.RawMessage `json:"folder_name"`
-	DestPath   json.RawMessage `json:"dest_path"`
+	UserID     		string          `json:"user_id"`
+	SaveDetail		bool						`json:"save_detail"`
+	FolderName 		json.RawMessage `json:"folder_name"`
+	DestPath   		json.RawMessage `json:"dest_path"`
 }
 
 // Config collector info and setting.
