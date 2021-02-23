@@ -4,9 +4,12 @@ go:
 
 script:
 - export GO111MODULE=on
-- go test -v ./collector
+- go test -v -covermode=count -coverprofile=coverage.out ./collector
 - GOOS=windows GOARCH=amd64 go build ./cmd/main.go
-
+ 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
 notifications:
     email:
         - zmcx16@gmail.com
