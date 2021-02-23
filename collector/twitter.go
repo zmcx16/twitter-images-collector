@@ -65,7 +65,7 @@ func (tapi *TwitterAPI) GenBearerToken(APIKey, APISecret string) string {
 }
 
 // GetTweets get user timeline twitter
-func (tapi *TwitterAPI) GetTweets(token, user string, start string, rts bool) []map[string]interface{} {
+func (tapi *TwitterAPI) GetTweets(token, user, start string, rts bool) []map[string]interface{} {
 
 	reqParam := "?screen_name=" + user + "&count=200&include_rts=" + strconv.FormatBool(rts) + "&tweet_mode=extended"
 	if start != "0" {
