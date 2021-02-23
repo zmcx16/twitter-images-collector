@@ -60,7 +60,9 @@ func (tapi *TwitterAPI) GenBearerToken(APIKey, APISecret string) string {
 		return jsonTokenResp.AccessToken
 	}
 
-	log.Error("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
+	errorMsg := "Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode)
+	log.Error(errorMsg)
+	fmt.Println(errorMsg)
 	return ""
 }
 
@@ -97,6 +99,8 @@ func (tapi *TwitterAPI) GetTweets(token, user, start string, rts bool) []map[str
 		return jsonResp
 	}
 
-	fmt.Println("Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode))
+	errorMsg := "Error! resp.StatusCode = " + strconv.Itoa(resp.StatusCode)
+	log.Error(errorMsg)
+	fmt.Println(errorMsg)
 	return jsonResp
 }
