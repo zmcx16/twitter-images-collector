@@ -31,7 +31,7 @@ type Collector struct {
 // Init collector
 func (c *Collector) Init(configPath string) bool {
 
-	if !c.config.LoadConfig(configPath) {
+	if !c.config.LoadConfigFromPath(configPath) {
 		fmt.Printf("Load Config file failed (%s)\n", configPath)
 		return false
 	}

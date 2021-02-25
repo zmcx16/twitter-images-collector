@@ -1,7 +1,9 @@
 package collector
 
 import (
+	"os"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -27,12 +29,25 @@ type Config struct {
 	APIKey          string     `json:"api_key"`
 	APISecret       string     `json:"api_secret"`
 	BearerToken     string
+
+	twitterAPI			*TwitterAPI
 }
 
-// LoadConfig (read config and generate twitter bearer token)
-func (c *Config) LoadConfig(configPath string) bool {
+// LoadConfigFromPath (read config and generate twitter bearer token)
+func (c *Config) LoadConfigFromPath(configPath string) bool {
 
-	byteConfig, err := ioutil.ReadFile(configPath)
+	file, err := os.Open(configPath)
+	if err != nil {
+			log.Error(err)
+	}
+	defer file.Close()
+	return c.LoadConfigFromReader(file)
+}
+
+// LoadConfigFromReader call by loadConfigFromPath for easy do unit test
+func (c *Config) LoadConfigFromReader(r io.Reader) bool {
+
+	byteConfig, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Error(err)
 		return false
@@ -46,8 +61,11 @@ func (c *Config) LoadConfig(configPath string) bool {
 		log.SetLevel(log.ErrorLevel)
 	}
 
-	twitterAPI := &TwitterAPI{Client: &http.Client{}}
-	c.BearerToken = twitterAPI.GenBearerToken(c.APIKey, c.APISecret)
+	if c.twitterAPI == nil {
+		c.twitterAPI = &TwitterAPI{Client: &http.Client{}}
+	}
+	
+	c.BearerToken = c.twitterAPI.GenBearerToken(c.APIKey, c.APISecret)
 	if c.BearerToken == "" {
 		return false
 	}
