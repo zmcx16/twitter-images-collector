@@ -24,6 +24,12 @@ type TwitterAPI struct {
 	Client *http.Client
 }
 
+// ITwitterAPI interface
+type ITwitterAPI interface {
+  GenBearerToken(APIKey, APISecret string) string
+  GetTweets(token, user, start string, rts bool) []map[string]interface{}
+}
+
 // GenBearerToken generate twitter bearer token
 func (tapi *TwitterAPI) GenBearerToken(APIKey, APISecret string) string {
 
