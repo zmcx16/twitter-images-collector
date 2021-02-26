@@ -202,7 +202,7 @@ func (c *Collector) dwTweetImgs(tweets []map[string]interface{}, stopDays time.T
 	return strconv.FormatFloat(lastTweetFloat, 'f', 0, 64), userDWEnd
 }
 
-func saveImage(imgURL, imgSize, filePath string) bool {
+var saveImage = func(imgURL, imgSize, filePath string) bool {
 
 	destImgFilePath := filePath + filepath.Ext(imgURL)
 	if _, err := os.Stat(destImgFilePath); err == nil || os.IsExist(err) {
@@ -237,7 +237,7 @@ func saveImage(imgURL, imgSize, filePath string) bool {
 	return true
 }
 
-func saveDetailInfo(tweetText, filePath string) bool {
+var saveDetailInfo = func(tweetText, filePath string) bool {
 
 	destDetailFilePath := filePath + ".txt"
 	if _, err := os.Stat(destDetailFilePath); err == nil || os.IsExist(err) {

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/prashantv/gostub"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -48,6 +49,12 @@ func TestDoDownload_ProcessDownload_VerifyResult(t *testing.T) {
 		{expectedWithImgUrls: true, tweetData: `[{"created_at":"Thu Apr 06 15:28:43 +0000 2017", "id": 100, "entities":{"media":[{"media_url":"https://i.imgur.com/IKBYy9Y.jpg"}]}, "extended_entities": {"media":[{"media_url":"https://i.imgur.com/hqGapcm.jpg"}]},"full_text":"OOOXXX"}]`},
 		{expectedWithImgUrls: false, tweetData: "[]"},
 	}
+
+	stubSaveImage := gostub.StubFunc(&saveImage, true)
+	defer stubSaveImage.Reset()
+
+	stubSaveDetailInfo := gostub.StubFunc(&saveDetailInfo, true)
+	defer stubSaveDetailInfo.Reset()
 
 	for _, test := range tests {
 
