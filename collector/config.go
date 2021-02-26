@@ -18,6 +18,12 @@ type UserData struct {
 	DestPath   json.RawMessage `json:"dest_path"`
 }
 
+// IConfig interface
+type IConfig interface {
+	LoadConfigFromPath(configPath string) bool
+	LoadConfigFromReader(r io.Reader) bool
+}
+
 // Config collector info and setting.
 type Config struct {
 	ThreadCnt       int        `json:"thread_cnt"`
@@ -35,6 +41,10 @@ type Config struct {
 
 // LoadConfigFromPath (read config and generate twitter bearer token)
 func (c *Config) LoadConfigFromPath(configPath string) bool {
+
+	if configPath == "" {
+		return false
+	}
 
 	file, err := os.Open(configPath)
 	if err != nil {

@@ -68,7 +68,7 @@ func TestGetTweets_GetTweetsData_ReturnTweets(t *testing.T) {
 		start          string
 		rts            bool
 	}{
-		{expected: true, respStatusCode: 200, respContent: "[{\"entities\":[{\"media\":[]}],\"full_text\":\"OOOXXX\"},{\"entities\":[{\"media\":[]}],\"full_text\":\"XXXOOO\"}]", token: "XXX", user: "aaa", start: "0", rts: true},
+		{expected: true, respStatusCode: 200, respContent: `[{"entities":{"media":[]},"full_text":"OOOXXX"},{"entities":[{"media":[]}],"full_text":"XXXOOO"}]`, token: "XXX", user: "aaa", start: "0", rts: true},
 		{expected: false, respStatusCode: 404, respContent: "[]", token: "XXX", user: "user not found", start: "0", rts: true},
 	}
 

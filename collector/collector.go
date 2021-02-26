@@ -20,18 +20,25 @@ import (
 
 // Collector struct
 type Collector struct {
-	config           Config
+	Conf IConfig
+
 	userImgCnt       int
 	muxThreadStopped sync.RWMutex
 	muxUserImgCnt    sync.RWMutex
 	muxLastTwitterID sync.RWMutex
 	muxTweet         sync.RWMutex
+
+	twitterAPI ITwitterAPI
 }
 
 // Init collector
 func (c *Collector) Init(configPath string) bool {
 
-	if !c.config.LoadConfigFromPath(configPath) {
+	if c.twitterAPI == nil {
+		c.twitterAPI = &TwitterAPI{Client: &http.Client{}}
+	}
+
+	if !c.Conf.LoadConfigFromPath(configPath) {
 		fmt.Printf("Load Config file failed (%s)\n", configPath)
 		return false
 	}
@@ -41,13 +48,13 @@ func (c *Collector) Init(configPath string) bool {
 // DoDownload run download images tasks
 func (c *Collector) DoDownload() {
 
-	token := c.config.BearerToken
-	threadCnt := c.config.ThreadCnt
-	imgSize := c.config.ImageSize
-	retweets := c.config.IncludeRetweets
-	stopDays := time.Now().AddDate(0, 0, -1*c.config.SyncLastNDays)
+	token := c.Conf.(*Config).BearerToken
+	threadCnt := c.Conf.(*Config).ThreadCnt
+	imgSize := c.Conf.(*Config).ImageSize
+	retweets := c.Conf.(*Config).IncludeRetweets
+	stopDays := time.Now().AddDate(0, 0, -1*c.Conf.(*Config).SyncLastNDays)
 
-	for _, user := range c.config.CollectUsers {
+	for _, user := range c.Conf.(*Config).CollectUsers {
 
 		destPath := string(user.DestPath)
 		destPath = strings.Trim(destPath, "\"") // remove json.RawMessage start and end ""
@@ -74,8 +81,7 @@ func (c *Collector) DoDownload() {
 		lastTweet := "0"
 
 		for {
-			twitterAPI := &TwitterAPI{Client: &http.Client{}}
-			tweets := twitterAPI.GetTweets(token, user.UserID, lastTweet, retweets)
+			tweets := c.twitterAPI.GetTweets(token, user.UserID, lastTweet, retweets)
 			fmt.Printf("get twitter list: %d, (%s)\n", len(tweets), lastTweet)
 			if len(tweets) <= 0 {
 				fmt.Printf("Stop task due to no tweets anymore (%s)\n", user.UserID)

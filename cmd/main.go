@@ -27,7 +27,7 @@ func main() {
 	mw := io.MultiWriter(r)
 	log.SetOutput(mw)
 	log.SetReportCaller(true)
-	c := collector.Collector{}
+	c := collector.Collector{Conf: &collector.Config{}}
 
 	if !c.Init(path.Join(procDirPath, "config.json")) {
 		fmt.Println("twitter-images-collector Init failed")
